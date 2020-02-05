@@ -71,8 +71,17 @@
 		{% endfor %}
 	</div>
 </section>
+<button id="artist_edit" data-id="{{artist.id}}" class="btn btn-default btn-lg">Edit Artist</button>
 <button id="artist_delete" data-id="{{artist.id}}" class="btn btn-default btn-lg">Delete Artist</button>
 <script>
+	document.getElementById('artist_edit').onclick = function(e) {
+		const artist_id = e.target.dataset['id'];
+		fetch('/artists/'+ artist_id+'/edit', {
+			method: 'GET'
+		}).then(function(response){
+			return location.href = response.url;
+		})
+	}
 	document.getElementById('artist_delete').onclick = function(e) {
 		const artist_id = e.target.dataset['id'];
 		fetch('/artists/'+ artist_id, {
