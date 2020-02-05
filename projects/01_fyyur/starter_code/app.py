@@ -267,14 +267,34 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
-    # TODO: insert form data as a new Venue record in the db, instead
-    # TODO: modify data to be the data object returned from db insertion
+    form = VenueForm()
+    if not form.validate():
+        flash(form.errors)
+        return redirect(url_for('create_venue_form'))
+
+    try:
+        new_values = request.form
+        new_venue = Venue(
+            name=new_values.get('name'),
+            city=new_values.get('city'),
+            state=new_values.get('state'),
+            phone=new_values.get('phone'),
+            address=new_values.get('address'),
+            facebook_link=new_values.get('facebook_link'),
+            image_link=new_values.get('image_link'),
+            genres=','.join(new_values.getlist('genres')))
+        db.session.add(new_venue)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('Venue ' + request.form['name'] +
+              ' not listed! An exception occurred in the system :(')
+        raise e
+    finally:
+        db.session.close()
 
     # on successful db insert, flash success
     flash('Venue ' + request.form['name'] + ' was successfully listed!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
-    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
     return render_template('pages/home.html')
 
 
@@ -374,7 +394,7 @@ def show_artist(artist_id):
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
     form = ArtistForm()
-    # IDEA: add default values in the form and display in jinja as
+    # Aseem: IDEA: add default values in the form and display in jinja as
     # placeholders/default
     return render_template('forms/edit_artist.html',
                            form=form,
@@ -411,7 +431,7 @@ def edit_artist_submission(artist_id):
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
     form = VenueForm()
-    # IDEA: add default values in the form and display in jinja as
+    # Aseem: IDEA: add default values in the form and display in jinja as
     # placeholders/default
     return render_template('forms/edit_venue.html',
                            form=form,
@@ -457,14 +477,33 @@ def create_artist_form():
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
     # called upon submitting the new artist listing form
-    # TODO: insert form data as a new Venue record in the db, instead
-    # TODO: modify data to be the data object returned from db insertion
+    form = ArtistForm()
+    if not form.validate():
+        flash(form.errors)
+        return redirect(url_for('create_artist_form'))
+
+    try:
+        new_values = request.form
+        new_artist = Artist(
+            name=new_values.get('name'),
+            city=new_values.get('city'),
+            state=new_values.get('state'),
+            phone=new_values.get('phone'),
+            facebook_link=new_values.get('facebook_link'),
+            image_link=new_values.get('image_link'),
+            genres=','.join(new_values.getlist('genres')))
+        db.session.add(new_artist)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('Artist ' + request.form['name'] +
+              ' not listed! An exception occurred in the system :(')
+        raise e
+    finally:
+        db.session.close()
 
     # on successful db insert, flash success
     flash('Artist ' + request.form['name'] + ' was successfully listed!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Artist ' + data.name + ' could not be
-    # listed.')
     return render_template('pages/home.html')
 
 
@@ -500,14 +539,35 @@ def create_shows():
 
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
-    # called to create new shows in the db, upon submitting new show listing form
-    # TODO: insert form data as a new Show record in the db, instead
+    # called to create new shows in the db, upon submitting new show listing
+    # form
 
-    # on successful db insert, flash success
+    artist = Artist.query.get(int(request.form.get('artist_id')))
+    if artist is None:
+        success = False
+        flash('Show could not be listed :(' + "Artist id does not exist")
+        return redirect(url_for('create_shows'))
+
+    venue = Venue.query.get(int(request.form.get('venue_id')))
+    if venue is None:
+        success = False
+        flash('Show could not be listed :(' + "Venue id does not exist")
+        return redirect(url_for('create_shows'))
+
+    # Self TODO: add constraint that a venue and artist should have matching
+    # genres to have a valid show.
+    try:
+        show = Show(artist, venue, time=request.form.get('start_time'))
+        db.session.add(show)
+        db.session.commit()
+        print(show)
+    except Exception as e:
+        db.session.rollback()
+        raise e
+    finally:
+        db.session.close()
+
     flash('Show was successfully listed!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Show could not be listed.')
-    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
     return render_template('pages/home.html')
 
 
