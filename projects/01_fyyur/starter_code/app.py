@@ -204,40 +204,50 @@ def search_venues():
     return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
 
 
-def get_show_info_for_artist(shows):
+def get_show_with_artist_info(shows):
     show_info = []
     for show in shows:
-        show_info.append(show[1].__dict__.copy())
-        show_info[-1]['artist_id'] = show[2].id
-        show_info[-1]['artist_name'] = show[2].name
-        show_info[-1]['artist_image_link'] = show[2].image_link
+        show_info.append({**show[1].__dict__, **show._asdict()})
         show_info[-1]['start_time'] = babel.dates.format_datetime(
             show_info[-1]['start_time'], "yyyy-MM-dd HH:mm:ss")
     return show_info
+
+# Correction function to deal with arrays and incompatible naming of column
+
+
+def correct_venue_entry(data):
+    data['genres'] = data['genres'].split(',')
+    data['website'] = data.pop('website_link')
+    return data
 
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
     # shows the venue page with the given venue_id
 
-    venue_data = Venue.query.get(venue_id).__dict__
-    # self TODO: more elegant way?
-    venue_data['genres'] = venue_data['genres'].split(',')
-    # self TODO: see if renaming the column is a better idea
-    venue_data['website'] = venue_data.pop('website_link')
+    query = db.session.query(Venue,
+                             Show,
+                             Artist.id.label("artist_id"),
+                             Artist.name.label("artist_name"),
+                             Artist.image_link.label("artist_image_link"))\
+        .join(Venue).join(Artist).filter(Show.venue_id == venue_id)
 
-    shows = db.session.query(Venue, Show, Artist).join(
-        Venue).join(Artist).filter(Show.venue_id == venue_id)
+    # Just in case a venue has never hosted a show
+    if query.count() == 0:
+        return render_template('pages/show_venue.html',
+                               venue=correct_venue_entry(Venue.query.get(venue_id).__dict__))
 
-    upcoming = shows.filter(Show.start_time >= datetime.utcnow())
-    venue_data['upcoming_shows_count'] = upcoming.count()
-    venue_data['upcoming_shows'] = get_show_info_for_artist(upcoming)
+    data = correct_venue_entry(query.first()[0].__dict__)
 
-    past = shows.filter(Show.start_time < datetime.utcnow())
-    venue_data['past_shows_count'] = past.count()
-    venue_data['past_shows'] = get_show_info_for_artist(past)
+    upcoming = query.filter(Show.start_time >= datetime.utcnow())
+    data['upcoming_shows_count'] = upcoming.count()
+    data['upcoming_shows'] = get_show_with_artist_info(upcoming)
 
-    return render_template('pages/show_venue.html', venue=venue_data)
+    past = query.filter(Show.start_time < datetime.utcnow())
+    data['past_shows_count'] = past.count()
+    data['past_shows'] = get_show_with_artist_info(past)
+
+    return render_template('pages/show_venue.html', venue=data)
 
 #  Create Venue
 #  ----------------------------------------------------------------
@@ -298,39 +308,53 @@ def search_artists():
     return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
 
 
-def get_show_info_for_venue(shows):
+def get_show_with_venue_info(shows):
     show_info = []
     for show in shows:
-        show_info.append(show[1].__dict__.copy())
-        show_info[-1]['venue_id'] = show[2].id
-        show_info[-1]['venue_name'] = show[2].name
-        show_info[-1]['venue_image_link'] = show[2].image_link
+        show_info.append({**show[1].__dict__,  # deep dictionary creation. Without it show will just end up as <Show id>
+                          **show._asdict()})
         show_info[-1]['start_time'] = babel.dates.format_datetime(
             show_info[-1]['start_time'], "yyyy-MM-dd HH:mm:ss")
     return show_info
 
+# Correction function to deal with arrays and incompatible naming of column
+
+
+def correct_artist_entry(data):
+    data['genres'] = data['genres'].split(',')
+    data['website'] = data.pop('website_link')
+    return data
+
 
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
-        # shows the venue page with the given venue_id
-    artist_data = Artist.query.get(artist_id).__dict__
-    artist_data['genres'] = artist_data['genres'].split(',')
-    artist_data['website'] = artist_data.pop('website_link')
+    # shows the venue page with the given venue_id
+    query = db.session.query(
+        Artist,
+        Show,
+        Venue.id.label("venue_id"),
+        Venue.name.label("venue_name"),
+        Venue.image_link.label("venue_image_link"))\
+        .join(Artist).join(Venue).filter(Show.artist_id == artist_id)
 
-    shows = db.session.query(
-        Artist, Show, Venue).join(Artist).join(Venue).filter(Show.artist_id == artist_id)
-    upcoming = shows.filter(Show.start_time >= datetime.utcnow())
-    artist_data['upcoming_shows_count'] = upcoming.count()
-    artist_data['upcoming_shows'] = get_show_info_for_venue(upcoming)
+    # Just in case an artist has never had a show
+    if query.count() == 0:
+        return render_template('pages/show_artist.html',
+                               artist=correct_artist_entry(Artist.query.get(artist_id).__dict__))
 
-    past = shows.filter(Show.start_time < datetime.utcnow())
-    artist_data['past_shows_count'] = past.count()
-    artist_data['past_shows'] = get_show_info_for_venue(past)
+    data = correct_artist_entry(query.first()[0].__dict__)
 
-    return render_template('pages/show_artist.html', artist=artist_data)
+    upcoming_shows = query.filter(Show.start_time >= datetime.utcnow())
+    data['upcoming_shows_count'] = upcoming_shows.count()
+    data['upcoming_shows'] = get_show_with_venue_info(upcoming_shows.all())
 
-#  Update
-#  ----------------------------------------------------------------
+    past_shows = query.filter(Show.start_time < datetime.utcnow())
+    data['past_shows_count'] = past_shows.count()
+    data['past_shows'] = get_show_with_venue_info(past_shows.all())
+    return render_template('pages/show_artist.html', artist=data)
+
+    #  Update
+    #  ----------------------------------------------------------------
 
 
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
