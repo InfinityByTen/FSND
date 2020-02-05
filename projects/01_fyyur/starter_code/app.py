@@ -37,18 +37,34 @@ class Venue(db.Model):
     state = db.Column(db.String(120), nullable=False)
     address = db.Column(db.String(120))
     phone = db.Column(db.String(120))
+    genres = db.Column(db.String(120), nullable=False)
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
     website_link = db.Column(db.String(120))
     seeking_talent = db.Column(db.Boolean, nullable=False, default=False)
     # Self TODO: see if description state should be dependent on the bool value
     seeking_description = db.Column(db.String(240))
-    genres = db.Column(db.String(120), nullable=False)
     show_ref = db.relationship('Show', backref='venue',
       lazy = True)
 
     def __repr__(self):
       return f'<Venue {self.id}: "{self.name}", in ({self.city}, {self.state})>'
+
+    def __str__(self):
+      return f"""<Venue
+      id: {self.id},
+      name: {self.name},
+      city: {self.city},
+      state: {self.state}
+      address: {self.address if self.address is not None else "No address available"}
+      genres: {self.genres}
+      phone: {self.phone if self.phone is not None else "No Phone Available"}
+      seeking_talent: {self.seeking_talent}
+      seeking_description: {self.seeking_description if self.seeking_description is not None else "None"}
+      image_link:{"Available" if self.image_link is not None else "Not Available"}
+      facebook_link: {"Available" if self.facebook_link is not None else "Not Available"}
+      website_link: {"Available" if self.website_link is not None else "Not Available"}
+      >"""
 
 
 class Artist(db.Model):
@@ -71,6 +87,21 @@ class Artist(db.Model):
     def __repr__(self):
       return f'<Artist {self.id}: "{self.name}", from ({self.city}, {self.state})>'
 
+    def __str__(self):
+      return f"""<Artist
+      id: {self.id},
+      name: {self.name},
+      city: {self.city},
+      state: {self.state}
+      genres: {self.genres}
+      phone: {self.phone if self.phone is not None else "No Phone Available"}
+      seeking_venue: {self.seeking_venue}
+      seeking_description: {self.seeking_description if self.seeking_description is not None else "None"}
+      image_link:{"Available" if self.image_link is not None else "Not Available"}
+      facebook_link: {"Available" if self.facebook_link is not None else "Not Available"}
+      website_link: {"Available" if self.website_link is not None else "Not Available"}
+      >"""
+
 class Show(db.Model):
   __tablename__ = 'Show'
 
@@ -81,6 +112,11 @@ class Show(db.Model):
     nullable=False)
   artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'),
     nullable=False)
+
+  def __init__(self,artist,venue,time=None):
+    self.venue_id = venue.id
+    self.artist_id = artist.id
+    self.start_time = time or datetime.now()
 
 #----------------------------------------------------------------------------#
 # Filters.
