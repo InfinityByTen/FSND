@@ -21,7 +21,7 @@ from sqlalchemy import func, distinct
 #----------------------------------------------------------------------------#
 app = Flask(__name__)
 moment = Moment(app)
-app.config.from_object('config')
+app.config.from_object('config.DefaultConfig')
 db = SQLAlchemy(app)
 
 migrate = Migrate(app, db)
@@ -367,34 +367,43 @@ def show_artist(artist_id):
     data['past_shows'] = get_show_with_venue_info(past_shows.all())
     return render_template('pages/show_artist.html', artist=data)
 
-    #  Update
-    #  ----------------------------------------------------------------
+#  Update
+#  ----------------------------------------------------------------
 
 
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
     form = ArtistForm()
-    artist = {
-        "id": 4,
-        "name": "Guns N Petals",
-        "genres": ["Rock n Roll"],
-        "city": "San Francisco",
-        "state": "CA",
-        "phone": "326-123-5000",
-        "website": "https://www.gunsnpetalsband.com",
-        "facebook_link": "https://www.facebook.com/GunsNPetals",
-        "seeking_venue": True,
-        "seeking_description": "Looking for shows to perform at in the San Francisco Bay Area!",
-        "image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80"
-    }
-    # TODO: populate form with fields from artist with ID <artist_id>
-    return render_template('forms/edit_artist.html', form=form, artist=artist)
+    # IDEA: add default values in the form and display in jinja as
+    # placeholders/default
+    return render_template('forms/edit_artist.html',
+                           form=form,
+                           artist=Artist.query.get(artist_id).__dict__)
 
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
-    # TODO: take values from the form submitted, and update existing
-    # artist record with ID <artist_id> using the new attributes
+    form = ArtistForm()
+    if not form.validate():
+        flash(form.errors)
+        return redirect(url_for('edit_artist', artist_id=artist_id))
+
+    try:
+        new_values = request.form
+        artist = Artist.query.get(artist_id)
+        artist.name = new_values.get('name')
+        artist.city = new_values.get('city')
+        artist.state = new_values.get('state')
+        artist.phone = new_values.get('phone')
+        artist.facebook_link = new_values.get('facebook_link')
+        artist.image_link = new_values.get('image_link')
+        artist.genres = ','.join(new_values.getlist('genres'))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        raise e
+    finally:
+        db.session.close()
 
     return redirect(url_for('show_artist', artist_id=artist_id))
 
@@ -402,28 +411,37 @@ def edit_artist_submission(artist_id):
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
     form = VenueForm()
-    venue = {
-        "id": 1,
-        "name": "The Musical Hop",
-        "genres": ["Jazz", "Reggae", "Swing", "Classical", "Folk"],
-        "address": "1015 Folsom Street",
-        "city": "San Francisco",
-        "state": "CA",
-        "phone": "123-123-1234",
-        "website": "https://www.themusicalhop.com",
-        "facebook_link": "https://www.facebook.com/TheMusicalHop",
-        "seeking_talent": True,
-        "seeking_description": "We are on the lookout for a local artist to play every two weeks. Please call us.",
-        "image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60"
-    }
-    # TODO: populate form with values from venue with ID <venue_id>
-    return render_template('forms/edit_venue.html', form=form, venue=venue)
+    # IDEA: add default values in the form and display in jinja as
+    # placeholders/default
+    return render_template('forms/edit_venue.html',
+                           form=form,
+                           venue=Venue.query.get(venue_id).__dict__)
 
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
-    # TODO: take values from the form submitted, and update existing
-    # venue record with ID <venue_id> using the new attributes
+    form = VenueForm()
+    if not form.validate():
+        flash(form.errors)
+        return redirect(url_for('edit_venue', venue_id=venue_id))
+
+    try:
+        new_values = request.form
+        venue = Venue.query.get(venue_id)
+        venue.name = new_values.get('name')
+        venue.city = new_values.get('city')
+        venue.state = new_values.get('state')
+        venue.address = new_values.get('address')
+        venue.phone = new_values.get('phone')
+        venue.facebook_link = new_values.get('facebook_link')
+        venue.image_link = new_values.get('image_link')
+        venue.genres = ','.join(new_values.getlist('genres'))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        raise e
+    finally:
+        db.session.close()
     return redirect(url_for('show_venue', venue_id=venue_id))
 
 #  Create Artist

@@ -1,7 +1,8 @@
 from datetime import datetime
 from flask_wtf import Form
 from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField
-from wtforms.validators import DataRequired, AnyOf, URL
+from wtforms.validators import DataRequired, AnyOf, URL, Optional
+
 
 class ShowForm(Form):
     artist_id = StringField(
@@ -13,8 +14,9 @@ class ShowForm(Form):
     start_time = DateTimeField(
         'start_time',
         validators=[DataRequired()],
-        default= datetime.today()
+        default=datetime.today()
     )
+
 
 class VenueForm(Form):
     name = StringField(
@@ -86,9 +88,12 @@ class VenueForm(Form):
         'phone'
     )
     image_link = StringField(
-        'image_link', validators=[URL()]
+        'image_link', validators=[Optional(),URL()]
     )
     genres = SelectMultipleField(
+        # Aseem: Unclear TODO. Application works as expected even without a custom validator.
+        # User can select only the displayed options and is forced to select at least one.
+        # There is no straightforward way a user can go wrong with this.
         # TODO implement enum restriction
         'genres', validators=[DataRequired()],
         choices=[
@@ -114,8 +119,9 @@ class VenueForm(Form):
         ]
     )
     facebook_link = StringField(
-        'facebook_link', validators=[URL()]
+        'facebook_link', validators=[Optional(),URL()]
     )
+
 
 class ArtistForm(Form):
     name = StringField(
@@ -185,9 +191,12 @@ class ArtistForm(Form):
         'phone'
     )
     image_link = StringField(
-        'image_link', validators=[URL()]
+        'image_link', validators=[Optional(), URL()]
     )
     genres = SelectMultipleField(
+        # Aseem: Unclear TODO. Application works as expected even without a custom validator.
+        # User can select only the displayed options and is forced to select at least one.
+        # There is no straightforward way a user can go wrong with this.
         # TODO implement enum restriction
         'genres', validators=[DataRequired()],
         choices=[
@@ -213,8 +222,9 @@ class ArtistForm(Form):
         ]
     )
     facebook_link = StringField(
+        # Aseem: Unclear TODO. Not sure what does an enum restriction mean in a StringField
         # TODO implement enum restriction
-        'facebook_link', validators=[URL()]
+        'facebook_link', validators=[Optional(), URL()]
     )
 
 # TODO IMPLEMENT NEW ARTIST FORM AND NEW SHOW FORM
