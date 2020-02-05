@@ -1,7 +1,9 @@
 from datetime import datetime
 from flask_wtf import Form
 from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField
-from wtforms.validators import DataRequired, AnyOf, URL, Optional
+from wtforms.validators import DataRequired, AnyOf, URL, Optional, ValidationError
+import phonenumbers
+from string import digits
 
 
 class ShowForm(Form):
@@ -16,6 +18,18 @@ class ShowForm(Form):
         validators=[DataRequired()],
         default=datetime.today()
     )
+
+
+def is_phone_number_valid(form, field):
+    # Basic check to have only digits and + and -.
+    allowed = set(digits).union('/-').union('/+')
+    if not all(c in allowed for c in field.data):
+        raise ValidationError(
+            'Phone numbers can contain only digits or special characters ''-'', ''+''')
+    # Assuming that the app is only for US, because it relies on US states.
+    number = phonenumbers.parse(field.data, "US")
+    if not phonenumbers.is_valid_number(number):
+        raise ValidationError('The phone number is not a valid US number.')
 
 
 class VenueForm(Form):
@@ -85,10 +99,10 @@ class VenueForm(Form):
         'address', validators=[DataRequired()]
     )
     phone = StringField(
-        'phone'
+        'phone', validators=[is_phone_number_valid]
     )
     image_link = StringField(
-        'image_link', validators=[Optional(),URL()]
+        'image_link', validators=[Optional(), URL()]
     )
     genres = SelectMultipleField(
         # Aseem: Unclear TODO. Application works as expected even without a custom validator.
@@ -115,11 +129,12 @@ class VenueForm(Form):
             ('Reggae', 'Reggae'),
             ('Rock n Roll', 'Rock n Roll'),
             ('Soul', 'Soul'),
+            ('Swing', 'Swing'),
             ('Other', 'Other'),
         ]
     )
     facebook_link = StringField(
-        'facebook_link', validators=[Optional(),URL()]
+        'facebook_link', validators=[Optional(), URL()]
     )
 
 
@@ -187,8 +202,7 @@ class ArtistForm(Form):
         ]
     )
     phone = StringField(
-        # TODO implement validation logic for state
-        'phone'
+        'phone', validators=[is_phone_number_valid]
     )
     image_link = StringField(
         'image_link', validators=[Optional(), URL()]
@@ -218,6 +232,7 @@ class ArtistForm(Form):
             ('Reggae', 'Reggae'),
             ('Rock n Roll', 'Rock n Roll'),
             ('Soul', 'Soul'),
+            ('Swing', 'Swing'),
             ('Other', 'Other'),
         ]
     )
