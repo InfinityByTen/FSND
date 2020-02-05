@@ -112,9 +112,9 @@ class Show(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     start_time = db.Column(db.DateTime, nullable=False,
                            default=datetime.utcnow)
-    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'),
+    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id',  ondelete="CASCADE"),
                          nullable=False)
-    artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'),
+    artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id',  ondelete="CASCADE"),
                           nullable=False)
 
     def __init__(self, artist, venue, time=None):
