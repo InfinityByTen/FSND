@@ -26,6 +26,7 @@ def upgrade():
                nullable=False)
     op.alter_column('Venue', 'genres',
                existing_type=postgresql.ARRAY(sa.VARCHAR()),
+               type_=sa.VARCHAR(length=120),
                nullable=False)
     # ### end Alembic commands ###
 
@@ -36,7 +37,8 @@ def downgrade():
                existing_type=postgresql.ARRAY(sa.VARCHAR()),
                nullable=True)
     op.alter_column('Artist', 'genres',
-               existing_type=sa.VARCHAR(length=120),
+               existing_type=postgresql.ARRAY(sa.VARCHAR()),
+               type_=sa.VARCHAR(length=120),
                nullable=True)
     op.drop_column('Artist', 'seeking_venue')
     # ### end Alembic commands ###
