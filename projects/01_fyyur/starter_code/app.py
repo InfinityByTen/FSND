@@ -300,14 +300,23 @@ def create_venue_submission():
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
-    # TODO: Complete this endpoint for taking a venue_id, and using
-    # SQLAlchemy ORM to delete a record. Handle cases where the session commit
-    # could fail.
+    if Venue.query.get(venue_id) is None:
+        flash("There is nothing to delete!")
+        return json.dumps({'success': False}), 400
 
-    # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
-    # clicking that button delete it from the db then redirect the user to the
-    # homepage
-    return None
+    response = (False, 500)
+    try:
+        Venue.query.filter_by(id=venue_id).delete()
+        db.session.commit()
+        response = (True, 200)
+        flash("Your venue entry was successfully deleted!")
+    except:
+        db.session.rollback()
+        flash("Something went wrong. Your venue could not be deleted :(")
+    finally:
+        db.session.close()
+
+    return json.dumps({'success': response[0]}), response[1]
 
 #  Artists
 #  ----------------------------------------------------------------
@@ -507,8 +516,29 @@ def create_artist_submission():
     return render_template('pages/home.html')
 
 
+@app.route('/artists/<artist_id>', methods=['DELETE'])
+def delete_artist(artist_id):
+    if Artist.query.get(artist_id) is None:
+        flash("There is nothing to delete!")
+        return json.dumps({'success': False}), 400
+
+    response = (False, 500)
+    try:
+        Artist.query.filter_by(id=artist_id).delete()
+        db.session.commit()
+        response = (True, 200)
+        flash("Your venue entry was successfully deleted!")
+    except:
+        db.session.rollback()
+        flash("Something went wrong. Your venue could not be deleted :(")
+    finally:
+        db.session.close()
+
+    return json.dumps({'success': response[0]}), response[1]
+
 #  Shows
 #  ----------------------------------------------------------------
+
 
 @app.route('/shows')
 def shows():
