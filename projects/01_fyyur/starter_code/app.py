@@ -61,8 +61,10 @@ class Artist(db.Model):
     phone = db.Column(db.String(120))
     genres = db.Column(db.String(120), nullable=False)
     seeking_venue = db.Column(db.Boolean, nullable=False, default=False)
+    seeking_description = db.Column(db.String(240))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    website_link = db.Column(db.String(120))
     show_ref = db.relationship('Show', backref='artist',
       lazy = True)
 
