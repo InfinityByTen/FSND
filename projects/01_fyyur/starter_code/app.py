@@ -43,7 +43,7 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean, nullable=False, default=False)
     # Self TODO: see if description state should be dependent on the bool value
     seeking_description = db.Column(db.String(240))
-    genres = db.Column(db.ARRAY(db.String))
+    genres = db.Column(db.String(120), nullable=False)
     show_ref = db.relationship('Show', backref='venue',
       lazy = True)
 
@@ -59,7 +59,8 @@ class Artist(db.Model):
     city = db.Column(db.String(120), nullable=False)
     state = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(120))
-    genres = db.Column(db.ARRAY(db.String))
+    genres = db.Column(db.String(120), nullable=False)
+    seeking_venue = db.Column(db.Boolean, nullable=False, default=False)
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
     show_ref = db.relationship('Show', backref='artist',
