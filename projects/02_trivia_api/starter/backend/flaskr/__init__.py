@@ -39,6 +39,14 @@ def create_app(test_config=None):
   Create an endpoint to handle GET requests 
   for all available categories.
   '''
+    @app.route('/categories')
+    def get_categories():
+        categories = Category.query.all()
+        category_types = [category.type.lower() for category in categories]
+        return jsonify({
+            "success": True,
+            "categories": category_types
+        })
 
     '''
   @TODO: 
@@ -52,6 +60,25 @@ def create_app(test_config=None):
   ten questions per page and pagination at the bottom of the screen for three pages.
   Clicking on the page numbers should update the questions. 
   '''
+
+    @app.route('/questions')
+    def get_questions():
+        page = request.args.get('page', 1, int)
+        # self TODO: The model should be changed to have a relationship to use
+        # joins instead
+        ques_entries = Question.query.all()
+        formatted_ques = [question.format() for question in ques_entries]
+        cat_entries = Category.query.all()
+        categories = {
+            category.id: category.type.lower() for category in cat_entries}
+        # print(categories)
+        return jsonify({
+            "success": True,
+            "questions": formatted_ques,
+            "totalQuestions": len(formatted_ques),
+            "categories": categories,
+            "currentCategory": "science"
+        })
 
     '''
   @TODO: 
