@@ -35,8 +35,8 @@ def create_app(test_config=None):
         return response
 
     '''
-  @TODO: 
-  Create an endpoint to handle GET requests 
+  @TODO:
+  Create an endpoint to handle GET requests
   for all available categories.
   '''
     @app.route('/categories')
@@ -49,75 +49,100 @@ def create_app(test_config=None):
         })
 
     '''
-  @TODO: 
-  Create an endpoint to handle GET requests for questions, 
-  including pagination (every 10 questions). 
-  This endpoint should return a list of questions, 
-  number of total questions, current category, categories. 
+  @TODO:
+  Create an endpoint to handle GET requests for questions,
+  including pagination (every 10 questions).
+  This endpoint should return a list of questions,
+  number of total questions, current category, categories.
 
   TEST: At this point, when you start the application
   you should see questions and categories generated,
   ten questions per page and pagination at the bottom of the screen for three pages.
-  Clicking on the page numbers should update the questions. 
+  Clicking on the page numbers should update the questions.
   '''
 
-    @app.route('/questions')
+    @app.route('/questions', methods=['GET'])
     def get_questions():
         page = request.args.get('page', 1, int)
         # self TODO: The model should be changed to have a relationship to use
         # joins instead
+        # self TODO: Allow frontend to send page numbers in request. Now it
+        # will get only first page by default.
         ques_entries = Question.query.all()
-        formatted_ques = [question.format() for question in ques_entries]
-        cat_entries = Category.query.all()
-        categories = {
-            category.id: category.type.lower() for category in cat_entries}
-        # print(categories)
-        return jsonify({
-            "success": True,
-            "questions": formatted_ques,
-            "totalQuestions": len(formatted_ques),
-            "categories": categories,
-            "currentCategory": "science"
-        })
+        total_questions = len(ques_entries)
+        if total_questions < (page - 1) * 10:
+            abort(400, {"page value out of bounds"})
+        else:
+            start = (page - 1) * 10
+            end = min(total_questions, page * 10)
+            # Format only needed questions. Save resources.
+            formatted_ques = [question.format()
+                              for question in ques_entries[start:end]]
+            # Assume categories are expected to be page independent.
+            cat_entries = Category.query.all()
+            categories = {category.id: category.type.lower()
+                          for category in cat_entries}
+            return jsonify({
+                "success": True,
+                "questions": formatted_ques,
+                "totalQuestions": total_questions,
+                "categories": categories,
+                "currentCategory": "science"
+            })
 
     '''
-  @TODO: 
-  Create an endpoint to DELETE question using a question ID. 
+  @TODO:
+  Create an endpoint to DELETE question using a question ID.
 
   TEST: When you click the trash icon next to a question, the question will be removed.
-  This removal will persist in the database and when you refresh the page. 
+  This removal will persist in the database and when you refresh the page.
   '''
 
     '''
-  @TODO: 
-  Create an endpoint to POST a new question, 
-  which will require the question and answer text, 
+  @TODO:
+  Create an endpoint to POST a new question,
+  which will require the question and answer text,
   category, and difficulty score.
 
-  TEST: When you submit a question on the "Add" tab, 
+  TEST: When you submit a question on the "Add" tab,
   the form will clear and the question will appear at the end of the last page
-  of the questions list in the "List" tab.  
+  of the questions list in the "List" tab.
   '''
 
     '''
-  @TODO: 
-  Create a POST endpoint to get questions based on a search term. 
-  It should return any questions for whom the search term 
-  is a substring of the question. 
+  @TODO:
+  Create a POST endpoint to get questions based on a search term.
+  It should return any questions for whom the search term
+  is a substring of the question.
 
-  TEST: Search by any phrase. The questions list will update to include 
-  only question that include that string within their question. 
-  Try using the word "title" to start. 
+  TEST: Search by any phrase. The questions list will update to include
+  only question that include that string within their question.
+  Try using the word "title" to start.
   '''
 
     '''
-  @TODO: 
-  Create a GET endpoint to get questions based on category. 
+  @TODO:
+  Create a GET endpoint to get questions based on category.
 
-  TEST: In the "List" tab / main screen, clicking on one of the 
-  categories in the left column will cause only questions of that 
-  category to be shown. 
+  TEST: In the "List" tab / main screen, clicking on one of the
+  categories in the left column will cause only questions of that
+  category to be shown.
   '''
+
+    @app.route('/categories/<int:category_id>/questions', methods=['GET'])
+    def get_questions_for_category(category_id):
+        ques_entries = Question.query.filter(
+            Question.category == str(category_id)).all()
+        if not ques_entries:
+            abort(404)
+        else:
+            formatted_ques = [question.format() for question in ques_entries]
+            return jsonify({
+                "success": True,
+                "questions": formatted_ques,
+                "totalQuestions": len(formatted_ques),
+                "currentCategory": "art"
+            })
 
     '''
   @TODO: 
