@@ -15,7 +15,7 @@ def create_app(test_config=None):
     setup_db(app)
 
     '''
-  @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
+  Set up CORS. Allow '*' for origins.
   '''
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
@@ -24,7 +24,7 @@ def create_app(test_config=None):
         return jsonify({'message': 'This is an app.'})
 
     '''
-  @TODO: Use the after_request decorator to set Access-Control-Allow
+  Access-Control-Allow
   '''
     @app.after_request
     def after_request(response):
@@ -36,8 +36,30 @@ def create_app(test_config=None):
 
     '''
   @TODO:
-  Create an endpoint to handle GET requests
-  for all available categories.
+  Create error handlers for all expected errors
+  including 404 and 422.
+  '''
+    '''
+  Error Handlers
+  '''
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({
+            "success": False,
+            "error": 404,
+            "message": "Aw Snap, page not found :("
+        }), 404
+
+    @app.errorhandler(400)
+    def bad_request(error):
+        return jsonify({
+            "success": False,
+            "error": 400,
+            "message": "Bad request. Check your paramaters again."
+        }), 400
+
+    '''
+  Endpoint to handle GET requests for all available categories.
   '''
     @app.route('/categories')
     def get_categories():
@@ -49,13 +71,12 @@ def create_app(test_config=None):
         })
 
     '''
-  @TODO:
-  Create an endpoint to handle GET requests for questions,
+  GET requests for questions,
   including pagination (every 10 questions).
-  This endpoint should return a list of questions,
+  This endpoint returns a list of questions,
   number of total questions, current category, categories.
 
-  TEST: At this point, when you start the application
+  --TEST-- Possibly TOTO: At this point, when you start the application
   you should see questions and categories generated,
   ten questions per page and pagination at the bottom of the screen for three pages.
   Clicking on the page numbers should update the questions.
@@ -66,12 +87,10 @@ def create_app(test_config=None):
         page = request.args.get('page', 1, int)
         # self TODO: The model should be changed to have a relationship to use
         # joins instead
-        # self TODO: Allow frontend to send page numbers in request. Now it
-        # will get only first page by default.
         ques_entries = Question.query.all()
         total_questions = len(ques_entries)
         if total_questions < (page - 1) * 10:
-            abort(400, {"page value out of bounds"})
+            abort(400)
         else:
             start = (page - 1) * 10
             end = min(total_questions, page * 10)
@@ -87,7 +106,7 @@ def create_app(test_config=None):
                 "questions": formatted_ques,
                 "totalQuestions": total_questions,
                 "categories": categories,
-                "currentCategory": "science"
+                "currentCategory": "science"  # Decide what should this be.
             })
 
     '''
@@ -121,14 +140,8 @@ def create_app(test_config=None):
   '''
 
     '''
-  @TODO:
-  Create a GET endpoint to get questions based on category.
-
-  TEST: In the "List" tab / main screen, clicking on one of the
-  categories in the left column will cause only questions of that
-  category to be shown.
+    GET endpoint to get questions based on category.
   '''
-
     @app.route('/categories/<int:category_id>/questions', methods=['GET'])
     def get_questions_for_category(category_id):
         ques_entries = Question.query.filter(
@@ -154,12 +167,6 @@ def create_app(test_config=None):
   TEST: In the "Play" tab, after a user selects "All" or a category,
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
-  '''
-
-    '''
-  @TODO: 
-  Create error handlers for all expected errors 
-  including 404 and 422. 
   '''
 
     return app
