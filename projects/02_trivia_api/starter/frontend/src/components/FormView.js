@@ -34,7 +34,7 @@ class FormView extends Component {
   submitQuestion = (event) => {
     event.preventDefault();
     $.ajax({
-      url: '/questions', //TODO: update request URL
+      url: '/questions/new',
       type: "POST",
       dataType: 'json',
       contentType: 'application/json',
@@ -48,6 +48,8 @@ class FormView extends Component {
         withCredentials: true
       },
       crossDomain: true,
+      // Self TODO: add a checkbox to switch between clearing on submit
+      // and reset to add another question
       success: (result) => {
         document.getElementById("add-question-form").reset();
         return;
@@ -91,7 +93,7 @@ class FormView extends Component {
             <select name="category" onChange={this.handleChange}>
               {Object.keys(this.state.categories).map(id => {
                   return (
-                    <option key={id} value={id}>{this.state.categories[id]}</option>
+                    <option key={id} value={parseInt(id)+1}>{this.state.categories[id]}</option>
                   )
                 })}
             </select>
