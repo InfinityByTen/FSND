@@ -2,6 +2,7 @@ import os
 from sqlalchemy import Column, String, Integer, create_engine
 from flask_sqlalchemy import SQLAlchemy
 import json
+from dataclasses import dataclass
 
 database_name = "trivia"
 database_path = "postgres:///{}".format(database_name)
@@ -21,14 +22,20 @@ def setup_db(app, database_path=database_path):
     db.init_app(app)
     db.create_all()
 
+
 '''
 Question
 
 '''
 
 
+@dataclass
 class Question(db.Model):
     __tablename__ = 'questions'
+
+    id:  int
+    question:  str
+    answer:  str
 
     id = Column(Integer, primary_key=True)
     question = Column(String)
@@ -61,6 +68,7 @@ class Question(db.Model):
             'category': self.category,
             'difficulty': self.difficulty
         }
+
 
 '''
 Category

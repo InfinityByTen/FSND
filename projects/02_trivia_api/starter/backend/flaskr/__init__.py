@@ -3,6 +3,7 @@ from flask import Flask, request, abort, jsonify, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
+from sqlalchemy import func
 
 import json
 
@@ -82,6 +83,7 @@ def create_app(test_config=None):
   you should see questions and categories generated,
   ten questions per page and pagination at the bottom of the screen for three pages.
   Clicking on the page numbers should update the questions.
+  self TODO: Fix the frontend. It's broken.
   '''
 
     @app.route('/questions', methods=['GET'])
@@ -112,12 +114,20 @@ def create_app(test_config=None):
             })
 
     '''
-  @TODO:
-  Create an endpoint to DELETE question using a question ID.
-
-  TEST: When you click the trash icon next to a question, the question will be removed.
-  This removal will persist in the database and when you refresh the page.
+  Endpoint to DELETE question using a question ID.
   '''
+    @app.route('/questions/<int:ques_id>', methods=['DELETE'])
+    def delete_question(ques_id):
+        question = Question.query.get(ques_id)
+        if question is None:
+            return jsonify({
+                "success": False
+            }), 400
+
+        question.delete()
+        return jsonify({
+            "success": True
+        })
 
     '''
   Endpoint to POST a new question,
@@ -136,8 +146,6 @@ def create_app(test_config=None):
                 "success": False
             }), 400
 
-        categories = [category.format()
-                      for category in Category.query.order_by(Category.id).all()]
         question = Question(data['question'], data['answer'], data[
                             'category'], data['difficulty'])
         question.insert()
@@ -192,5 +200,30 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not.
   '''
+    @app.route('/quizzes', methods=['POST'])
+    def start_quiz():
+        params = json.loads(request.data)
+        previous_ques = params['previous_questions']
+
+        # WARNING: VERY VERY UGLY HACK.
+        # DIDN'T HAVE THE PATIENCE TO FIX FRONTEND SENDING WRONG IDS
+        # Will have to fix. All and Science are sent with the same code.
+        category = str(int(params['quiz_category']['id']) + 1)
+        # This can be cached.
+        new_questions = Question.query.filter(Question.category == category)
+
+        if len(previous_ques) != 0:
+            new_questions = new_questions.filter(
+                ~Question.id.in_(previous_ques))
+
+        if new_questions.count() == 0:
+            question = None
+        else:
+            question = random.choice(new_questions.all())
+
+        return jsonify({
+            "success": True,
+            "question": question
+        })
 
     return app
