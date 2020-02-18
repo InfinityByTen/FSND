@@ -75,9 +75,12 @@ Category
 
 '''
 
-
+@dataclass
 class Category(db.Model):
     __tablename__ = 'categories'
+
+    id:  int
+    type:  str
 
     id = Column(Integer, primary_key=True)
     type = Column(String)

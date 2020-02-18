@@ -186,7 +186,7 @@ def create_app(test_config=None):
                 "success": True,
                 "questions": formatted_ques,
                 "totalQuestions": len(formatted_ques),
-                "currentCategory": "art"
+                "currentCategory": Category.query.get(category_id)
             })
 
     '''
