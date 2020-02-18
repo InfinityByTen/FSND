@@ -191,26 +191,26 @@ def create_app(test_config=None):
 
     '''
   @TODO:
-  Create a POST endpoint to get questions to play the quiz.
+  POST endpoint to get questions to play the quiz.
   This endpoint should take category and previous question parameters
   and return a random questions within the given category,
   if provided, and that is not one of the previous questions.
-
-  TEST: In the "Play" tab, after a user selects "All" or a category,
-  one question at a time is displayed, the user is allowed to answer
-  and shown whether they were correct or not.
   '''
     @app.route('/quizzes', methods=['POST'])
     def start_quiz():
         params = json.loads(request.data)
         previous_ques = params['previous_questions']
 
-        # WARNING: VERY VERY UGLY HACK.
+        # WARNING: VERY VERY UGLY HACKS.
         # DIDN'T HAVE THE PATIENCE TO FIX FRONTEND SENDING WRONG IDS
-        # Will have to fix. All and Science are sent with the same code.
-        category = str(int(params['quiz_category']['id']) + 1)
-        # This can be cached.
-        new_questions = Question.query.filter(Question.category == category)
+        # Front end should be fixed for this.
+        if params['quiz_category']['type'] == 'click':  # don't know how
+            new_questions = Question.query
+        else:
+            category = str(int(params['quiz_category']['id']) + 1)
+           # This can be cached
+            new_questions = Question.query.filter(
+                Question.category == category)
 
         if len(previous_ques) != 0:
             new_questions = new_questions.filter(

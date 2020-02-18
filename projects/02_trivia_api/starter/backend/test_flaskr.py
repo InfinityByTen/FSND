@@ -88,12 +88,6 @@ class TriviaTestCase(unittest.TestCase):
         self.assert_questions_for_category_count(6, 2)
         pass
 
-    """
-    TODO
-    Write at least one test for each test for successful operation and for expected errors.
-    """
-
-
 # Make the tests conveniently executable
 if __name__ == "__main__":
     unittest.main()
