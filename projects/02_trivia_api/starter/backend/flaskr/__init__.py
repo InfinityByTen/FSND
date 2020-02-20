@@ -97,7 +97,7 @@ def create_app(test_config=None):
             abort(400)
         else:
             start = (page - 1) * 10
-            end = min(total_questions, page * 10)
+            end = min(total_questions, start+10)
             # Format only needed questions. Save resources.
             formatted_ques = [question.format()
                               for question in ques_entries[start:end]]
