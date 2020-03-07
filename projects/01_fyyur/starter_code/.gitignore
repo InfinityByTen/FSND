@@ -1,7 +1,5 @@
-env/
-.vscode/
-__pycache__/
-test.db
+.vscode
+__pycache__
 
 # OS generated files #
 ######################
@@ -15,5 +13,5 @@ Thumbs.db
 
 # ENV folder #
 ##############
-*/env/*
+/env/*
 */node_modules/*
