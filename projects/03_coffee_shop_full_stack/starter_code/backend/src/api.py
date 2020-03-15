@@ -18,6 +18,10 @@ CORS(app)
 '''
 # db_drop_and_create_all()
 
+# @app.route('/')
+# def say_hello():
+#     return jsonify({'message':'heya', 'success':True})
+
 # ROUTES
 '''
 @TODO implement endpoint
@@ -29,6 +33,13 @@ CORS(app)
 '''
 
 
+@app.route('/drinks')
+def get_drinks_short():
+    drinks = [description.short() for description in Drink.query.all()]
+    print("number of drinks: ", len(drinks))
+    return jsonify({"success": True, "drinks": drinks})
+
+
 '''
 @TODO implement endpoint
     GET /drinks-detail
@@ -37,6 +48,11 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks-detail')
+def get_drinks_dertailed():
+    drinks = [description.long() for description in Drink.query.all()]
+    print("number of drinks: ", len(drinks))
+    return jsonify({"success": True, "drinks": drinks})
 
 
 '''
@@ -48,6 +64,16 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
         or appropriate status code indicating reason for failure
 '''
+
+# Authentication goes here
+@app.route('/drinks', methods=['POST'])
+def add_new_drink():
+    data = json.loads(request.data)
+    # print(data)
+    new_drink = Drink(data['title'],str(json.dumps(data['recipe'])) )
+    new_drink.insert()
+    return jsonify({'success':True, "drink":[json.dumps(new_drink.short())]})
+
 
 
 '''
@@ -61,6 +87,15 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks/<drink_id>',methods=['PATCH'])
+def patch_drink(drink_id):
+    data = Drink.query.get(drink_id)
+    # print(data)
+    # print("incoming recipe",json.loads(request.data)['recipe'])
+    data.recipe = json.dumps(json.loads(request.data)['recipe'])
+    data.update()
+    return jsonify({"success":True,"drinks":[data.short()]})
+
 
 
 '''
@@ -73,6 +108,12 @@ CORS(app)
     returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks/<drink_id>',methods=['DELETE'])
+def remove_drink(drink_id):
+    data = Drink.query.get(drink_id)
+    data.delete()
+    return jsonify({"success":True,"delete":drink_id})
+
 
 
 # Error Handling
