@@ -53,21 +53,11 @@ def get_token_auth_header():
     return token[1]
 
 
-'''
-@TODO implement check_permissions(permission, payload) method
-    @INPUTS
-        permission: string permission (i.e. 'post:drink')
-        payload: decoded jwt payload
-
-    it should raise an AuthError if permissions are not included in the payload
-        !!NOTE check your RBAC settings in Auth0
-    it should raise an AuthError if the requested permission string is not in the payload permissions array
-    return true otherwise
-'''
-
-
 def check_permissions(permission, payload):
-    return
+    if permission in payload['permissions']:
+        return
+    else:
+        raise AuthError("not_authorised", 403)
 
 
 def verify_decode_jwt(token):
@@ -82,7 +72,9 @@ def verify_decode_jwt(token):
         }, 401)
 
     for key in jwks['keys']:
+        # print(key)
         if key['kid'] == unverified_header['kid']:
+            print("kid matched")
             rsa_key = {
                 'kty': key['kty'],
                 'kid': key['kid'],
@@ -99,15 +91,12 @@ def verify_decode_jwt(token):
                 audience=API_AUDIENCE,
                 issuer='https://' + AUTH0_DOMAIN + '/'
             )
-
             return payload
-
         except jwt.ExpiredSignatureError:
             raise AuthError({
                 'code': 'token_expired',
                 'description': 'Token expired.'
             }, 401)
-
         except jwt.JWTClaimsError:
             raise AuthError({
                 'code': 'invalid_claims',
@@ -118,9 +107,10 @@ def verify_decode_jwt(token):
                 'code': 'invalid_header',
                 'description': 'Unable to parse authentication token.'
             }, 400)
+
     raise AuthError({
         'code': 'invalid_header',
-                'description': 'Unable to find the appropriate key.'
+                'description': 'Unable to parse authentication token.'
     }, 400)
 
 
@@ -131,9 +121,10 @@ def requires_auth(permission=''):
             try:
                 token = get_token_auth_header()
                 payload = verify_decode_jwt(token)
+                # print(payload)
                 check_permissions(permission, payload)
-            except:
-                abort(401)
+            except Exception as e:
+                raise e
             return f(payload, *args, **kwargs)
 
         return wrapper

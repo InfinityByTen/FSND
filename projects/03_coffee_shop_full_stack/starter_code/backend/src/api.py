@@ -48,8 +48,12 @@ def get_drinks_short():
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+
+
 @app.route('/drinks-detail')
-def get_drinks_dertailed():
+@requires_auth('get:drinks-detail')
+def get_drinks_dertailed(something):
+    print(something)
     drinks = [description.long() for description in Drink.query.all()]
     print("number of drinks: ", len(drinks))
     return jsonify({"success": True, "drinks": drinks})
@@ -66,14 +70,16 @@ def get_drinks_dertailed():
 '''
 
 # Authentication goes here
+
+
 @app.route('/drinks', methods=['POST'])
+@requires_auth('post:drinks')
 def add_new_drink():
     data = json.loads(request.data)
     # print(data)
-    new_drink = Drink(data['title'],str(json.dumps(data['recipe'])) )
+    new_drink = Drink(data['title'], str(json.dumps(data['recipe'])))
     new_drink.insert()
-    return jsonify({'success':True, "drink":[json.dumps(new_drink.short())]})
-
+    return jsonify({'success': True, "drink": [json.dumps(new_drink.short())]})
 
 
 '''
@@ -87,15 +93,17 @@ def add_new_drink():
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
         or appropriate status code indicating reason for failure
 '''
-@app.route('/drinks/<drink_id>',methods=['PATCH'])
+
+
+@app.route('/drinks/<drink_id>', methods=['PATCH'])
+@requires_auth('patch:drinks')
 def patch_drink(drink_id):
     data = Drink.query.get(drink_id)
     # print(data)
     # print("incoming recipe",json.loads(request.data)['recipe'])
     data.recipe = json.dumps(json.loads(request.data)['recipe'])
     data.update()
-    return jsonify({"success":True,"drinks":[data.short()]})
-
+    return jsonify({"success": True, "drinks": [data.short()]})
 
 
 '''
@@ -108,12 +116,14 @@ def patch_drink(drink_id):
     returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
         or appropriate status code indicating reason for failure
 '''
-@app.route('/drinks/<drink_id>',methods=['DELETE'])
+
+
+@app.route('/drinks/<drink_id>', methods=['DELETE'])
+@requires_auth('delete:drinks')
 def remove_drink(drink_id):
     data = Drink.query.get(drink_id)
     data.delete()
-    return jsonify({"success":True,"delete":drink_id})
-
+    return jsonify({"success": True, "delete": drink_id})
 
 
 # Error Handling
@@ -139,16 +149,31 @@ def unprocessable(error):
                     "error": 404,
                     "message": "resource not found"
                     }), 404
-
 '''
 
 '''
-@TODO implement error handler for 404
-    error handler should conform to general task above 
+    Error handler for 404
 '''
 
 
+@app.errorhandler(404)
+def unprocessable(error):
+    return jsonify({
+        "success": False,
+        "error": 404,
+        "message": "Not Found"
+    }), 404
+
+
 '''
-@TODO implement error handler for AuthError
-    error handler should conform to general task above 
+    Error handler for AuthError
 '''
+
+
+@app.errorhandler(AuthError)
+def autherror(error):
+    return jsonify({
+        "success": False,
+        "error": error.status_code,
+        "message": error.error
+    }), error.status_code
