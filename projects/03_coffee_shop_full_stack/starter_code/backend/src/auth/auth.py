@@ -74,7 +74,7 @@ def verify_decode_jwt(token):
     for key in jwks['keys']:
         # print(key)
         if key['kid'] == unverified_header['kid']:
-            print("kid matched")
+            # print("kid matched")
             rsa_key = {
                 'kty': key['kty'],
                 'kid': key['kid'],
