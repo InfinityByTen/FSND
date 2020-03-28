@@ -57,7 +57,7 @@ def check_permissions(permission, payload):
     if permission in payload['permissions']:
         return
     else:
-        raise AuthError("not_authorised", 403)
+        raise AuthError("not_authorised", 401)
 
 
 def verify_decode_jwt(token):
@@ -106,12 +106,12 @@ def verify_decode_jwt(token):
             raise AuthError({
                 'code': 'invalid_header',
                 'description': 'Unable to parse authentication token.'
-            }, 400)
+            }, 401)
 
     raise AuthError({
         'code': 'invalid_header',
                 'description': 'Unable to parse authentication token.'
-    }, 400)
+    }, 401)
 
 
 def requires_auth(permission=''):

@@ -16,7 +16,7 @@ CORS(app)
 !! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
 '''
-# db_drop_and_create_all()
+db_drop_and_create_all()
 
 
 # ROUTES
@@ -82,10 +82,17 @@ def add_new_drink(something):
 @requires_auth('patch:drinks')
 def patch_drink(something, drink_id):
     data = Drink.query.get(drink_id)
+    # print(data)
     if not data:
         abort(404)
     try:
-        data.recipe = json.dumps(json.loads(request.data)['recipe'])
+        data_dict = json.loads(request.data)
+        if "title" in data_dict:
+            # print("found patch for title")
+            data.title = json.dumps(data_dict['title'])
+        if "recipe" in data_dict:
+            # print("found patch for recipe")
+            data.recipe = json.dumps(data_dict['recipe'])
         data.update()
         return jsonify({"success": True, "drinks": [data.long()]}), 200
     except Exception as e:
@@ -102,6 +109,7 @@ def patch_drink(something, drink_id):
 @requires_auth('delete:drinks')
 def remove_drink(something, drink_id):
     data = Drink.query.get(drink_id)
+    # print(data)
     if not data:
         abort(404)
     try:
@@ -158,6 +166,7 @@ def unprocessable(error):
 
 @app.errorhandler(AuthError)
 def autherror(error):
+    # print(error.error)
     return jsonify({
         "success": False,
         "error": error.status_code,
